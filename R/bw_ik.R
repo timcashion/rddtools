@@ -17,14 +17,14 @@
 #' rdd_bw_ik(rd)
 
 
-rdd_bw_ik <- function(rdd_object, kernel = c("Triangular", "Uniform", "Normal")) {
+rdd_bw_ik <- function(rdd_object, kernel = c("Triangular", "Uniform", "Normal"), time="discrete") {
     
     kernel <- match.arg(kernel)
     checkIsRDD(rdd_object)
     cutpoint <- getCutpoint(rdd_object)
     
     res <- rdd_bw_ik_low(X = rdd_object$x, Y = rdd_object$y, threshold = cutpoint, verbose = FALSE, type = "RES", returnBig = FALSE, 
-        kernel = kernel)
+        kernel = kernel, time=time)
     return(res)
     
 }
@@ -99,6 +99,8 @@ rdd_bw_ik_low <- function(X, Y, threshold = 0, verbose = FALSE, type = c("RES", 
     h1 <- 1.84 * sd(X) * N^(-1/5)
     if (verbose) 
         cat("\n-h1:", h1)
+    if (time=="discrete")
+        h1 <- round(h1,0)
     
     ## f(cut)
     isIn_h1_left <- X >= (threshold - h1) & X < threshold
