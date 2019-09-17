@@ -5,6 +5,7 @@
 #' 
 #' @param rdd_object of class rdd_data created by \code{\link{rdd_data}}
 #' @param kernel The type of kernel used: either \code{triangular} or \code{uniform}. 
+#' @param time The type of kernel used: either \code{TRUE} or \code{FALSE}. 
 #' @return The optimal bandwidth
 #' @references Imbens, Guido and Karthik Kalyanaraman. (2012) 'Optimal Bandwidth Choice for the regression discontinuity estimator,' 
 #' Review of Economic Studies (2012) 79, 933-959
@@ -17,14 +18,14 @@
 #' rdd_bw_ik(rd)
 
 
-rdd_bw_ik <- function(rdd_object, kernel = c("Triangular", "Uniform", "Normal"), time="discrete") {
+rdd_bw_ik <- function(rdd_object, kernel = c("Triangular", "Uniform", "Normal"), discrete=FALSE) {
     
     kernel <- match.arg(kernel)
     checkIsRDD(rdd_object)
     cutpoint <- getCutpoint(rdd_object)
     
     res <- rdd_bw_ik_low(X = rdd_object$x, Y = rdd_object$y, threshold = cutpoint, verbose = FALSE, type = "RES", returnBig = FALSE, 
-        kernel = kernel, time=time)
+        kernel = kernel, discrete=discrete)
     return(res)
     
 }
@@ -81,8 +82,8 @@ ik_amse <- function(rdd_object, kernel = c("Triangular", "Uniform", "Normal"), b
 }
 
 
-rdd_bw_ik_low <- function(X, Y, threshold = 0, verbose = FALSE, type = c("RES", "RES_imp", "WP"), returnBig = FALSE, kernel = c("Triangular", 
-    "Uniform", "Normal")) {
+rdd_bw_ik_low <- function(X, Y, threshold = 0, verbose = TRUE, type = c("RES", "RES_imp", "WP"), returnBig = FALSE, kernel = c("Triangular", 
+    "Uniform", "Normal"), discrete=discrete) {
     
     type <- match.arg(type)
     kernel <- match.arg(kernel)
@@ -97,10 +98,10 @@ rdd_bw_ik_low <- function(X, Y, threshold = 0, verbose = FALSE, type = c("RES", 
     
     ## Silverman bandwidth
     h1 <- 1.84 * sd(X) * N^(-1/5)
+    if (discrete)
+      h1 <- round(h1,0)
     if (verbose) 
         cat("\n-h1:", h1)
-    if (time=="discrete")
-        h1 <- round(h1,0)
     
     ## f(cut)
     isIn_h1_left <- X >= (threshold - h1) & X < threshold
